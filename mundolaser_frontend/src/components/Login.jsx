@@ -24,42 +24,47 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
-      <div className="card shadow-lg p-4 border-0" style={{ width: '400px' }}>
+    <section className="login-page">
+      <div className="card login-card">
         <div className="text-center mb-4">
-          <h2 className="fw-bold text-primary mb-0">Mundo Láser</h2>
-          <p className="text-muted small">Acceso al Panel de Control</p>
+          <span className="login-brand-mark" aria-hidden="true"><i className="bi bi-printer-fill"></i></span>
+          <h1>Mundo Láser</h1>
+          <p className="text-muted mb-0">Ingresa para administrar el taller</p>
         </div>
 
         {error && <div className="alert alert-danger py-2">{error}</div>}
 
         <form onSubmit={manejarLogin}>
           <div className="mb-3">
-            <label className="form-label fw-bold text-secondary">Correo Electrónico</label>
+            <label className="form-label fw-semibold" htmlFor="login-email">Correo Electrónico</label>
             <input
+              id="login-email"
               type="email"
               className="form-control"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="mb-4">
-            <label className="form-label fw-bold text-secondary">Contraseña</label>
+            <label className="form-label fw-semibold" htmlFor="login-password">Contraseña</label>
             <input
+              id="login-password"
               type="password"
               className="form-control"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary w-100 fw-bold">
-            Ingresar al Sistema
+          <button type="submit" className="btn btn-primary w-100 py-2">
+            <i className="bi bi-box-arrow-in-right me-2"></i>Ingresar al Sistema
           </button>
         </form>
       </div>
-    </div>
+    </section>
   );
 };
 

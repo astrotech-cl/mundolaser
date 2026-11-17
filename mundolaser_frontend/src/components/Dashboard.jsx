@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { formatearFecha } from '../utils/fecha';
+import { ordenarPorCliente } from '../utils/ordenar';
 
 const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [ordenColumna, setOrdenColumna] = useState({ key: 'cliente', direction: 'asc' });
 
   // Formulario superior: Crear Nuevo Ticket
   const [nuevoTicket, setNuevoTicket] = useState({
@@ -176,6 +178,7 @@ const Dashboard = () => {
 
   // Filtro combinado: Búsqueda por texto + Selector de Estado
   const listaTickets = Array.isArray(tickets) ? tickets : [];
+  const clientesOrdenados = ordenarPorCliente(clientes);
   const ticketsFiltrados = listaTickets.filter((t) => {
     if (!t) return false;
 
@@ -190,15 +193,74 @@ const Dashboard = () => {
 
     return coincideTexto && coincideEstado;
   });
+  const cambiarOrden = (key) => {
+    setOrdenColumna((actual) => {
+      if (actual.key === key) {
+        return {
+          key,
+          direction: actual.direction === 'asc' ? 'desc' : 'asc'
+        };
+      }
+
+      return {
+        key,
+        direction: key === 'id' || key === 'fecha' ? 'desc' : 'asc'
+      };
+    });
+  };
+
+  const iconoOrden = (key) => {
+    if (ordenColumna.key !== key) return '↕';
+    return ordenColumna.direction === 'asc' ? '↑' : '↓';
+  };
+
+  const ticketsFiltradosOrdenados = [...ticketsFiltrados].sort((a, b) => {
+    let resultado = 0;
+
+    switch (ordenColumna.key) {
+      case 'id': {
+        const idA = Number(a.id) || 0;
+        const idB = Number(b.id) || 0;
+        resultado = idA - idB;
+        break;
+      }
+      case 'cliente': {
+        resultado = String(a.cliente || '').localeCompare(String(b.cliente || ''), 'es', { sensitivity: 'base' });
+        break;
+      }
+      case 'fecha': {
+        resultado = (Date.parse(String(a.fecha || '')) || 0) - (Date.parse(String(b.fecha || '')) || 0);
+        break;
+      }
+      default:
+        resultado = String(a.cliente || '').localeCompare(String(b.cliente || ''), 'es', { sensitivity: 'base' });
+    }
+
+    return ordenColumna.direction === 'asc' ? resultado : -resultado;
+  });
 
   return (
-    <div className="container-fluid py-3 px-4">
+    <div className="app-content py-3">
+      <header className="page-heading dashboard-heading">
+        <div>
+          <h1><span className="page-title-icon"><i className="bi bi-tools"></i></span>Taller</h1>
+          <p>Administra los tickets y el servicio técnico</p>
+        </div>
+        <div className="ticket-count" aria-label={`${tickets.length} tickets registrados`}>
+          <i className="bi bi-clipboard2-check"></i>
+          <div>
+            <strong>{tickets.length}</strong>
+            <span>tickets registrados</span>
+          </div>
+        </div>
+      </header>
+
       {/* SECCIÓN SUPERIOR: FORMULARIO REGISTRAR NUEVO TICKET */}
       <div className="card shadow-sm border-0 mb-4">
         <div className="card-header bg-dark text-white fw-bold py-2 d-flex align-items-center">
           <i className="bi bi-plus-circle me-2"></i>Registrar Nuevo Ticket
         </div>
-        <div className="card-body bg-light">
+        <div className="card-body">
           <form onSubmit={crearTicket} className="row g-2 align-items-center">
             <div className="col-md-3">
               <input
@@ -211,7 +273,7 @@ const Dashboard = () => {
                 required
               />
               <datalist id="lista-clientes-dash">
-                {clientes.map((c) => (
+                {clientesOrdenados.map((c) => (
                   <option key={c.id || c.nombre} value={c.nombre} />
                 ))}
               </datalist>
@@ -240,7 +302,7 @@ const Dashboard = () => {
             </div>
 
             <div className="col-md-2 text-end">
-              <button type="submit" className="btn btn-success fw-bold w-100">
+              <button type="submit" className="btn btn-primary w-100">
                 <i className="bi bi-box-arrow-in-down me-1"></i>Guardar Ticket
               </button>
             </div>
@@ -249,19 +311,17 @@ const Dashboard = () => {
       </div>
 
       {/* SECCIÓN PRINCIPAL: LISTADO DE TICKETS */}
-      <div className="bg-primary text-white p-3 rounded-top d-flex justify-content-between align-items-center shadow-sm">
-        <h5 className="fw-bold mb-0">
-          <i className="bi bi-list-task me-2"></i>Tickets Registrados
-        </h5>
-        <span className="badge bg-white text-primary fw-bold">
+      <div className="ticket-list-heading">
+        <h2><i className="bi bi-list-task me-2 text-primary"></i>Tickets Registrados</h2>
+        <span className="badge rounded-pill">
           {ticketsFiltrados.length} resultados
         </span>
       </div>
 
       <div className="bg-white p-3 rounded-bottom shadow-sm border mb-4">
         {/* Barra de Filtro */}
-        <div className="row g-2 mb-3">
-          <div className="col-md-8">
+        <div className="row g-2 mb-3 align-items-end">
+          <div className="col-md-7">
             <div className="input-group">
               <span className="input-group-text bg-white"><i className="bi bi-search text-muted"></i></span>
               <input
@@ -273,7 +333,7 @@ const Dashboard = () => {
               />
             </div>
           </div>
-          <div className="col-md-4">
+          <div className="col-md-5">
             <select
               className="form-select text-muted"
               value={filtroEstado}
@@ -289,21 +349,51 @@ const Dashboard = () => {
 
         {/* Tabla Principal */}
         <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0 text-center">
+          <table className="table table-hover align-middle mb-0 text-center ticket-table">
             <thead className="table-light">
               <tr className="text-secondary small">
-                <th>ID</th>
-                <th>Cliente</th>
+                <th>
+                  <button
+                    type="button"
+                    className={`sort-header-btn ${ordenColumna.key === 'id' ? 'is-active' : ''}`}
+                    onClick={() => cambiarOrden('id')}
+                    aria-label={`Ordenar por ID ${ordenColumna.direction === 'asc' && ordenColumna.key === 'id' ? 'descendente' : 'ascendente'}`}
+                  >
+                    <span>ID</span>
+                    <small>{iconoOrden('id')}</small>
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className={`sort-header-btn ${ordenColumna.key === 'cliente' ? 'is-active' : ''}`}
+                    onClick={() => cambiarOrden('cliente')}
+                    aria-label={`Ordenar por cliente ${ordenColumna.direction === 'asc' && ordenColumna.key === 'cliente' ? 'descendente' : 'ascendente'}`}
+                  >
+                    <span>Cliente</span>
+                    <small>{iconoOrden('cliente')}</small>
+                  </button>
+                </th>
                 <th>Equipo</th>
                 <th>Descripción</th>
                 <th>Estado</th>
-                <th>Fecha</th>
+                <th>
+                  <button
+                    type="button"
+                    className={`sort-header-btn ${ordenColumna.key === 'fecha' ? 'is-active' : ''}`}
+                    onClick={() => cambiarOrden('fecha')}
+                    aria-label={`Ordenar por fecha ${ordenColumna.direction === 'asc' && ordenColumna.key === 'fecha' ? 'descendente' : 'ascendente'}`}
+                  >
+                    <span>Fecha</span>
+                    <small>{iconoOrden('fecha')}</small>
+                  </button>
+                </th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {ticketsFiltrados.length > 0 ? (
-                ticketsFiltrados.map((ticket) => (
+                ticketsFiltradosOrdenados.map((ticket) => (
                   <React.Fragment key={ticket.id}>
                     <tr>
                       <td className="fw-bold">#{ticket.id}</td>

@@ -3,10 +3,23 @@ import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { api } from '../api';
 import { formatearFecha } from '../utils/fecha';
+import { ordenarPorCliente, ordenarPorFecha } from '../utils/ordenar';
 
 const Alertas = () => {
   const [alertas, setAlertas] = useState([]);
   const [error, setError] = useState('');
+  const [ordenListado, setOrdenListado] = useState('cliente-asc');
+  const alertasOrdenadas = ordenListado === 'cliente-desc'
+    ? ordenarPorCliente(alertas, 'desc')
+    : ordenListado === 'vencimiento-asc'
+      ? ordenarPorFecha(alertas, 'fecha_vencimiento', 'asc')
+      : ordenListado === 'vencimiento-desc'
+        ? ordenarPorFecha(alertas, 'fecha_vencimiento', 'desc')
+        : ordenListado === 'atencion-asc'
+          ? ordenarPorFecha(alertas, 'fecha', 'asc')
+          : ordenListado === 'atencion-desc'
+            ? ordenarPorFecha(alertas, 'fecha', 'desc')
+            : ordenarPorCliente(alertas);
 
   const obtenerAlertas = async () => {
     try {
@@ -79,37 +92,52 @@ const Alertas = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="app-content">
+      <header className="page-heading">
         <div>
-          <h2 className="fw-bold text-danger mb-0">
-            <i className="bi bi-bell-fill me-2"></i>Alertas de Garantía
-          </h2>
-          <p className="text-muted">Equipos con más de 3 meses desde su última atención</p>
+          <h1><span className="page-title-icon alert-title-icon"><i className="bi bi-bell-fill"></i></span>Alertas de Garantía</h1>
+          <p>Equipos con más de 3 meses desde su última atención</p>
         </div>
-        <div>
+        <div className="page-heading-actions d-flex align-items-center flex-wrap gap-2">
+          <div className="d-flex align-items-center gap-2">
+            <label htmlFor="orden-alertas" className="form-label small fw-semibold mb-0 text-nowrap">Ordenar por</label>
+            <select
+              id="orden-alertas"
+              className="form-select"
+              value={ordenListado}
+              onChange={(e) => setOrdenListado(e.target.value)}
+            >
+              <option value="cliente-asc">Cliente: A-Z</option>
+              <option value="cliente-desc">Cliente: Z-A</option>
+              <option value="vencimiento-asc">Vencimiento: ascendente</option>
+              <option value="vencimiento-desc">Vencimiento: descendente</option>
+              <option value="atencion-asc">Última atención: ascendente</option>
+              <option value="atencion-desc">Última atención: descendente</option>
+            </select>
+          </div>
           <button
             onClick={exportarAExcel}
-            className="btn btn-success fw-bold me-3 shadow-sm"
+            className="btn btn-outline-success shadow-sm"
             disabled={alertas.length === 0}
           >
             <i className="bi bi-file-earmark-excel me-2"></i>Exportar Excel
           </button>
-          <Link to="/dashboard" className="btn btn-outline-primary fw-bold shadow-sm">
+          <Link to="/dashboard" className="btn btn-primary shadow-sm">
             Volver al Taller
           </Link>
         </div>
-      </div>
+      </header>
 
       {error && <div className="alert alert-danger">{error}</div>}
 
-      <div className="card border-danger shadow-sm">
-        <div className="card-header bg-danger text-white fw-bold">
-          Clientes a contactar para mantenimiento preventivo ({alertas.length})
+      <div className="card alert-card">
+        <div className="card-header alert-card-header d-flex justify-content-between align-items-center">
+          <span><i className="bi bi-exclamation-circle me-2"></i>Clientes a contactar para mantenimiento preventivo</span>
+          <span className="badge rounded-pill text-bg-danger">{alertas.length}</span>
         </div>
         <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0 text-center">
+            <table className="table table-hover align-middle mb-0 text-center app-table">
               <thead className="table-light">
                 <tr>
                   <th>ID Ticket</th>
@@ -122,7 +150,7 @@ const Alertas = () => {
               </thead>
               <tbody>
                 {alertas.length > 0 ? (
-                  alertas.map((alerta) => (
+                  alertasOrdenadas.map((alerta) => (
                     <tr key={alerta.id}>
                       <td className="fw-bold">#{alerta.id}</td>
                       <td className="text-start fw-bold">

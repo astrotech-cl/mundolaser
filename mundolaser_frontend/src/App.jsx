@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { Footer } from './components/Footer';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
@@ -33,7 +33,7 @@ function App() {
     <BrowserRouter>
       <div className="d-flex flex-column min-vh-100">
         {token && (
-          <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+          <nav className="navbar navbar-expand-lg navbar-dark app-navbar">
             <div className="container">
               <span className="navbar-brand fw-bold text-primary">
                 <i className="bi bi-printer-fill me-2"></i>Mundo Láser
@@ -43,11 +43,11 @@ function App() {
               </button>
               <div className={`collapse navbar-collapse${menuAbierto ? ' show' : ''}`} id="navbarNav">
                 <div className="navbar-nav ms-auto align-items-center">
-                  <Link to="/dashboard" className="nav-link fw-bold">Taller</Link>
-                  <Link to="/clientes" className="nav-link fw-bold">Clientes</Link>
-                  <Link to="/alertas" className="nav-link text-danger fw-bold">
+                  <NavLink to="/dashboard" className="nav-link" onClick={() => setMenuAbierto(false)}>Taller</NavLink>
+                  <NavLink to="/clientes" className="nav-link" onClick={() => setMenuAbierto(false)}>Clientes</NavLink>
+                  <NavLink to="/alertas" className="nav-link text-danger" onClick={() => setMenuAbierto(false)}>
                     <i className="bi bi-bell-fill me-1"></i>Alertas Post-Venta
-                  </Link>
+                  </NavLink>
                   <button onClick={cerrarSesion} className="btn btn-outline-danger btn-sm ms-lg-3 mt-2 mt-lg-0 fw-bold">
                     <i className="bi bi-box-arrow-right me-1"></i>Salir
                   </button>

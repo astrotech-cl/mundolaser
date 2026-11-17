@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { ordenarPorCliente } from '../utils/ordenar';
 
 const vacio = { nombre: '', telefono: '', email: '' };
 
@@ -7,6 +8,7 @@ const Clientes = () => {
   const [clientes, setClientes] = useState([]);
   const [formulario, setFormulario] = useState(vacio);
   const [error, setError] = useState('');
+  const clientesOrdenados = ordenarPorCliente(clientes);
 
   const obtenerClientes = async () => {
     try {
@@ -42,18 +44,21 @@ const Clientes = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <div className="mb-4">
-        <h2 className="fw-bold text-dark mb-0">
-          <i className="bi bi-people-fill me-2"></i>Clientes
-        </h2>
-        <p className="text-muted mb-0">Listado de clientes registrados</p>
-      </div>
+    <div className="app-content">
+      <header className="page-heading">
+        <div>
+          <h1><span className="page-title-icon"><i className="bi bi-people-fill"></i></span>Clientes</h1>
+          <p>Administra la información de tus clientes</p>
+        </div>
+        <span className="badge rounded-pill text-bg-light border px-3 py-2">{clientes.length} registrados</span>
+      </header>
 
       {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="card shadow-sm border-0 mb-4">
-        <div className="card-header bg-dark text-white fw-bold">Registrar cliente</div>
+        <div className="card-header bg-dark text-white">
+          <i className="bi bi-person-plus me-2"></i>Registrar cliente
+        </div>
         <div className="card-body">
           <form onSubmit={crearCliente} className="row g-3">
             <div className="col-md-4">
@@ -83,19 +88,20 @@ const Clientes = () => {
               />
             </div>
             <div className="col-12 text-end">
-              <button type="submit" className="btn btn-success fw-bold">Guardar cliente</button>
+              <button type="submit" className="btn btn-primary">Guardar cliente</button>
             </div>
           </form>
         </div>
       </div>
 
       <div className="card shadow-sm border-0">
-        <div className="card-header bg-dark text-white fw-bold">
+        <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
           <i className="bi bi-person-lines-fill me-2"></i>Base de clientes
+          <span className="badge rounded-pill text-bg-light">{clientes.length}</span>
         </div>
         <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0 text-center">
+            <table className="table table-hover align-middle mb-0 text-center app-table">
               <thead className="table-light">
                 <tr>
                   <th>ID</th>
@@ -105,8 +111,8 @@ const Clientes = () => {
                 </tr>
               </thead>
               <tbody>
-                {clientes.length > 0 ? (
-                  clientes.map((cliente) => (
+                {clientesOrdenados.length > 0 ? (
+                  clientesOrdenados.map((cliente) => (
                     <tr key={cliente.id}>
                       <td className="fw-bold">#{cliente.id}</td>
                       <td>{cliente.nombre}</td>
